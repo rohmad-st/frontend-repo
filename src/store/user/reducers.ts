@@ -47,10 +47,8 @@ const userSlice = createSlice({
         state.status = 'loading';
         state.error = null;
       })
-      .addCase(putUserData.fulfilled, (state, action) => {
+      .addCase(putUserData.fulfilled, (state) => {
         state.status = 'succeeded';
-        console.log('debug putUserData:', { data: action.payload });
-        // state.users = action.payload as User[];
       })
       .addCase(putUserData.rejected, (state, action) => {
         state.status = 'failed';

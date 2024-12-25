@@ -14,7 +14,6 @@ import {
   IconButton
 } from '@mui/material';
 
-import FetchButton from '@/components/FetchButton';
 import { auth } from '@/apis/firebase';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { clearToken } from '@/store/auth/reducers';
@@ -48,10 +47,12 @@ const MainPage = () => {
   const handleUpdate = async (data: Omit<TUser, 'id'>) => {
     const payload = { ...selectedUser, ...data } as UserData;
     await dispatch(putUserData(payload));
-    fetchData();
+    await fetchData();
   };
 
-  const fetchData = () => dispatch(getUsersData());
+  const fetchData = async () => {
+    await dispatch(getUsersData());
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -60,7 +61,6 @@ const MainPage = () => {
       } else {
         setProfile(currentUser);
         setUser(currentUser);
-        fetchData();
       }
       setLoading(false);
     });
@@ -79,18 +79,37 @@ const MainPage = () => {
         </Typography>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-          <Button variant="outlined" onClick={() => setIsDialogOpen(true)}>
+          <Button
+            variantColor="secondary"
+            onClick={() => setIsDialogOpen(true)}>
             Sign Out
           </Button>
 
-          <FetchButton onClick={fetchData} status={status} error={error} />
+          <Button variantColor="primary" onClick={fetchData}>
+            {status === 'loading' ? 'Loading...' : 'Fetch Data'}
+          </Button>
         </Box>
 
-        {users.length > 0 && (
-          <Paper elevation={3} sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              User List
-            </Typography>
+        <Paper elevation={3} sx={{ p: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            User List
+          </Typography>
+
+          {status !== 'succeeded' && (
+            <Box p={2} textAlign="center">
+              {status === 'idle' && (
+                <Typography>
+                  Click &quot;Fetch Data&quot; to start fetch data.
+                </Typography>
+              )}
+              {status === 'loading' && <Typography>Loading...</Typography>}
+              {status === 'failed' && (
+                <Typography color="error">{error}</Typography>
+              )}
+            </Box>
+          )}
+
+          {users.length > 0 && (
             <List>
               {users.map((user) => (
                 <ListItem
@@ -109,8 +128,8 @@ const MainPage = () => {
                 </ListItem>
               ))}
             </List>
-          </Paper>
-        )}
+          )}
+        </Paper>
       </Box>
       <ConfirmDialog
         open={isDialogOpen}
